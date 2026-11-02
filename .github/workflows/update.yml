@@ -5,7 +5,7 @@
           -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
           "https://corsproxy.io" > raw_configs.txt || true
         
-        # Проверяем, удалось ли скачать ключи
+        # Проверяем, удалось ли скачать ключи (файл не должен быть пустым)
         if [ -s raw_configs.txt ]; then
           grep -v "#profile-web-page-url" raw_configs.txt | grep -v -e '^$' | sort -u > cleaned_configs.txt
           rm raw_configs.txt
