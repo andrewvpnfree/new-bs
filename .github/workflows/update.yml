@@ -2,34 +2,35 @@ name: Hourly Config Updater
 
 on:
   schedule:
-    # Запуск каждые 5 часов (минута 0, каждый 5-й час)
     - cron: '0 */5 * * *'
-  workflow_dispatch: # Позволяет запускать скрипт вручную кнопкой на GitHub
+  workflow_dispatch:
 
 jobs:
   update-links:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Дает право экшену делать push обратно в репозиторий
+      contents: write
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.x'
-
-    - name: Run updater script
-      run: python update_keys.py
+    - name: Download and clean configs
+      run: |
+        # Скачиваем ключи с маскировкой под обычный браузер Chrome, чтобы избежать блокировок
+        curl -s -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" "https://mydan.online" > raw_configs.txt
+        
+        # Удаляем строки с профилем, пустые строки и убираем дубликаты
+        grep -v "#profile-web-page-url" raw_configs.txt | grep -v -e '^$' | sort -u > cleaned_configs.txt
+        
+        # Удаляем временный сырой файл
+        rm raw_configs.txt
 
     - name: Commit and Push changes
       run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
         
-        # Проверяем, изменился ли файл с конфигурациями
         if git status --porcelain | grep -q "cleaned_configs.txt"; then
           git add cleaned_configs.txt
           git commit -m "Автоматическое обновление ключей (каждые 5 часов)"
