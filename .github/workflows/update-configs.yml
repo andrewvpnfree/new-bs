@@ -18,10 +18,9 @@ jobs:
       - name: Checkout target repository
         uses: actions/checkout@v4
 
-            - name: Download VLESS configs
-              run: |
-                    curl --http1.1 -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" --retry 5 --retry-delay 3 -L -o vless_configs.txt "https://mydan.online"
-
+      - name: Download VLESS configs
+        run: |
+          curl --http1.1 -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" --retry 5 --retry-delay 3 -L -o vless_configs.txt "https://mydan.online"
 
       - name: Commit and Push changes
         run: |
