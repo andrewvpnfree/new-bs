@@ -1,15 +1,16 @@
     - name: Download and clean configs
       run: |
-        # Скачиваем с ограничением по времени (максимум 15 секунд на попытку) и 3 повторами
+        # Скачиваем через прокси-обходчик, чтобы сервера GitHub не получали ошибку таймаута (код 28)
         curl -s -S -L --connect-timeout 15 --max-time 30 --retry 3 \
           -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
-          "https://mydan.online" > raw_configs.txt || true
+          "https://corsproxy.io" > raw_configs.txt || true
         
-        # Проверяем, удалось ли вообще что-то скачать (файл не должен быть пустым)
+        # Проверяем, удалось ли скачать ключи
         if [ -s raw_configs.txt ]; then
           grep -v "#profile-web-page-url" raw_configs.txt | grep -v -e '^$' | sort -u > cleaned_configs.txt
           rm raw_configs.txt
+          echo "Ключи успешно обновлены."
         else
-          echo "Предупреждение: Не удалось получить данные от сервера (таймаут). Пропускаем обновление."
+          echo "Предупреждение: Не удалось получить данные от сервера даже через прокси. Пропускаем обновление."
           rm -f raw_configs.txt
         fi
