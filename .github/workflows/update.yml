@@ -1,40 +1,15 @@
-name: Hourly Config Updater
-
-on:
-  schedule:
-    - cron: '0 */5 * * *'
-  workflow_dispatch:
-
-jobs:
-  update-links:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
     - name: Download and clean configs
       run: |
-        # Скачиваем ключи с маскировкой под обычный браузер Chrome, чтобы избежать блокировок
-        curl -s -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" "https://mydan.online" > raw_configs.txt
+        # Скачиваем с ограничением по времени (максимум 15 секунд на попытку) и 3 повторами
+        curl -s -S -L --connect-timeout 15 --max-time 30 --retry 3 \
+          -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+          "https://mydan.online" > raw_configs.txt || true
         
-        # Удаляем строки с профилем, пустые строки и убираем дубликаты
-        grep -v "#profile-web-page-url" raw_configs.txt | grep -v -e '^$' | sort -u > cleaned_configs.txt
-        
-        # Удаляем временный сырой файл
-        rm raw_configs.txt
-
-    - name: Commit and Push changes
-      run: |
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
-        
-        if git status --porcelain | grep -q "cleaned_configs.txt"; then
-          git add cleaned_configs.txt
-          git commit -m "Автоматическое обновление ключей (каждые 5 часов)"
-          git push
+        # Проверяем, удалось ли вообще что-то скачать (файл не должен быть пустым)
+        if [ -s raw_configs.txt ]; then
+          grep -v "#profile-web-page-url" raw_configs.txt | grep -v -e '^$' | sort -u > cleaned_configs.txt
+          rm raw_configs.txt
         else
-          echo "Изменений в ключах не обнаружено."
+          echo "Предупреждение: Не удалось получить данные от сервера (таймаут). Пропускаем обновление."
+          rm -f raw_configs.txt
         fi
