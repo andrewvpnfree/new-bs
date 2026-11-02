@@ -20,7 +20,7 @@ jobs:
 
       - name: Download VLESS configs
         run: |
-          curl -L -s -o vless_configs.txt "https://gbr.mydan.online/configs"
+          curl --http1.1 -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" -L -s -o vless_configs.txt "https://gbr.mydan.online/configs"
 
       - name: Commit and Push changes
         run: |
